@@ -52,3 +52,59 @@ Step	What Happens
 7.	React updates only what changed
 
 Let me know if you want a visual diagram of this flow too!
+
+
+Here's a step-by-step diagram showing how setState (like setCount) flows internally through React's Fiber architecture and the dispatchSetState function.
+
+
+
+🧩 Diagram: useState → setCount(5) → React Internals
+
+````
+[Your Component]
+   |
+   | Calls: setCount(5)
+   ↓
+[setCount function returned by useState]
+   |
+   | → Internally calls:
+   ↓
+dispatchSetState(fiber, queue, 5)
+   |
+   ├─▶ 🔎 Check if a callback was wrongly passed
+   |
+   ├─▶ 🧠 Determine update priority:
+   |       lane = requestUpdateLane(fiber)
+   |
+   ├─▶ 📥 Queue the state update:
+   |       dispatchSetStateInternal(fiber, queue, action, lane)
+   |        └─ Add update to updateQueue
+   |
+   └─▶ 📌 Mark fiber for update:
+           markStateUpdateScheduled(fiber, lane)
+   
+    ↓
+📆 [React Scheduler]
+   Schedules the component to re-render in the right lane (priority)
+
+    ↓
+🛠️ [React Renderer]
+   Processes fiber tree:
+   - Applies state updates
+   - Re-renders your component with new state
+
+    ↓
+🖼️ [Commit Phase]
+   - DOM is updated
+   - useEffect runs (if any)
+````
+
+
+🧠 Key Concepts Used in the Diagram
+Concept	Explanation
+Fiber	Internal object React uses to track your component tree.
+Lane	A way React prioritizes and batches state updates.
+Update Queue	Each state hook maintains a queue of pending updates.
+Scheduler	Handles when updates should happen (immediate, deferred, transition, etc).
+Renderer	Actually recalculates what your component should render.
+Commit Phase	Applies changes to the DOM and runs effects (like useEffect).
